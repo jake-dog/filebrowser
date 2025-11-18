@@ -38,27 +38,27 @@ tasks:
   builder-image:
     desc: Build docker image for compiling
     cmds:
-      - docker build --rm --build-arg UID={{.UID}} --build-arg GID={{.GID}} -f builder/Dockerfile -t filebrowser-builder:latest .
+      - docker build --rm --build-arg UID={{.UID}} --build-arg GID={{.GID}} -f builder/Dockerfile -t filebrowser-builder:latest ./builder
     vars:
       UID:
         sh: id -u
       GID:
         sh: id -g
 
-  build-in-docker:
-    desc: Build artifacts in docker
+  build-in-container:
+    desc: Build artifacts in a container
     cmds:
       - task: builder-image
-      - docker run --rm --entrypoint /bin/bash -v {{.ROOT_DIR}}:/home/user/{{.DIRNAME}} -w /home/user/{{.DIRNAME}} filebrowser-builder:latest -c '\. "$HOME/.nvm/nvm.sh" && task build'
+      - docker run --rm --entrypoint /bin/bash -e GOCACHE=/home/user/{{.DIRNAME}}/.cache/go-build -e GOMODCACHE=/home/user/{{.DIRNAME}}/.cache/mod -v {{.ROOT_DIR}}:/home/user/{{.DIRNAME}} -w /home/user/{{.DIRNAME}} filebrowser-builder:latest -c '\. "$HOME/.nvm/nvm.sh" && task build'
     vars:
       DIRNAME:
         sh: basename {{.ROOT_DIR}}
 
-  test-in-docker:
-    desc: Run tests in docker
+  test-in-container:
+    desc: Run tests in a container
     cmds:
       - task: builder-image
-      - docker run --rm --entrypoint /bin/bash -v {{.ROOT_DIR}}:/home/user/{{.DIRNAME}} -w /home/user/{{.DIRNAME}} filebrowser-builder:latest -c '\. "$HOME/.nvm/nvm.sh" && pushd frontend && pnpm install --frozen-lockfile && pnpm run lint && popd && golangci-lint run && go test --race ./...'
+      - docker run --rm --entrypoint /bin/bash -e GOCACHE=/home/user/{{.DIRNAME}}/.cache/go-build -e GOMODCACHE=/home/user/{{.DIRNAME}}/.cache/mod -e GOLANGCI_LINT_CACHE=/home/user/{{.DIRNAME}}/.cache/golangci-lint -v {{.ROOT_DIR}}:/home/user/{{.DIRNAME}} -w /home/user/{{.DIRNAME}} filebrowser-builder:latest -c '\. "$HOME/.nvm/nvm.sh" && pushd frontend && pnpm install --frozen-lockfile && pnpm run lint && popd && golangci-lint run && go test --race ./...'
     vars:
       DIRNAME:
         sh: basename {{.ROOT_DIR}}
