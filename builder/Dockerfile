@@ -1,4 +1,7 @@
+from golangci/golangci-lint:v2.6.2 as golint
 from golang:1.25.4
+
+COPY --from=golint /usr/bin/golangci-lint /usr/bin/golangci-lint
 
 # set up user to avoid permissions issues with git repo mounted into container
 ARG GID
