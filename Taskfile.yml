@@ -63,6 +63,12 @@ tasks:
       DIRNAME:
         sh: basename {{.ROOT_DIR}}
 
+  build-image:
+    desc: Build filebrowser container image
+    cmds:
+      - task: build-in-container
+      - docker build -t filebrowser:latest .
+
   release-make:
     internal: true
     prompt: Do you wish to proceed?
